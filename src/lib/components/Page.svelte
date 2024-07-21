@@ -6,7 +6,7 @@ import { SimplePool } from 'nostr-tools/pool';
 import { insertEventIntoAscendingList, normalizeURL } from 'nostr-tools/utils';
 import * as nip19 from 'nostr-tools/nip19';
 import { getGeneralEvents, sendReaction } from '$lib/utils';
-import { defaultRelays, getRoboHashURL, linkGitHub, urlToLinkEvent } from '$lib/config';
+import { defaultRelays, getRoboHashURL, linkGitHub, profileRelays, urlToLinkEvent } from '$lib/config';
 import { onMount } from 'svelte';
 import data from '@emoji-mart/data';
 import { Picker } from 'emoji-mart';
@@ -32,7 +32,7 @@ const getReactions = async (url: string): Promise<void> => {
 		}
 	});
 	const pubkeys: string[] = kind7events.map(ev => ev.pubkey);
-	const kind0events = await getGeneralEvents(pool, defaultRelays, [{ kinds: [0], authors: pubkeys }], (event: NostrEvent) => {
+	const kind0events = await getGeneralEvents(pool, profileRelays, [{ kinds: [0], authors: pubkeys }], (event: NostrEvent) => {
 		const prof = profiles.get(event.pubkey);
 		if (prof === undefined || prof.created_at < event.created_at) {
 			try {
