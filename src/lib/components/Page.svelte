@@ -190,7 +190,7 @@ onMount(async () => {
 </script>
 
 <svelte:head>
-	<title>Nos Star</title>
+	<title>MAKIBISHI</title>
 </svelte:head>
 
 <header>
