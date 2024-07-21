@@ -197,7 +197,7 @@ onMount(async () => {
 	<h1 data-makibishi-url="">
 		<a href="./">MAKIBISHI</a>
 		<span class="makibishi-container">
-			<button class="makibishi-button" on:click={() => callSendReaction()} title="add star"><svg><use xlink:href="/star.svg#reaction"></use></svg></button>
+			<button class="makibishi-button" on:click={() => callSendReaction()} title="add star"><svg><use xlink:href="./star.svg#reaction"></use></svg></button>
 			{#each reactionEvents as ev}
 				{@const emojiTag = ev.tags.find(tag => tag[0] === 'emoji')}
 				<span class="makibishi-unit">
@@ -241,7 +241,7 @@ onMount(async () => {
 		<dd><input id="npub-input" type="text" placeholder="npub1... or nprofile1..." bind:value={npub} on:change={getCustomEmojis} /><button on:click={getNpubWithNIP07}>NIP-07</button></dd>
 		<dt><label for="emoji-select">Select Emoji</label> {#if isGettingCustomEmojis}(preparing...){/if}</dt>
 		<dd>
-			<button id="emoji-select" class="makibishi-emoji" on:click={callSendEmoji} title="Emoji Reaction" disabled={isGettingCustomEmojis}><svg><use xlink:href="/smiled.svg#emoji"></use></svg></button>
+			<button id="emoji-select" class="makibishi-emoji" on:click={callSendEmoji} title="Emoji Reaction" disabled={isGettingCustomEmojis}><svg><use xlink:href="./smiled.svg#emoji"></use></svg></button>
 			<div bind:this={emojiPicker} class={emojiPickerVisible ? '' : 'makibishi-hidden'}></div>
 		</dd>
 	</dl>
