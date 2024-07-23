@@ -3,10 +3,10 @@ import type { NostrEvent } from 'nostr-tools/pure';
 import type { RelayRecord } from 'nostr-tools/relay';
 import type { Filter } from 'nostr-tools/filter';
 import { SimplePool } from 'nostr-tools/pool';
-import { insertEventIntoAscendingList, normalizeURL } from 'nostr-tools/utils';
+import { normalizeURL } from 'nostr-tools/utils';
 import * as nip19 from 'nostr-tools/nip19';
 import { getGeneralEvents, sendReaction } from '$lib/utils';
-import { defaultRelays, getRoboHashURL, linkGitHub, profileRelays, urlToLinkEvent } from '$lib/config';
+import { defaultRelays, linkGitHub, reactionEventKind } from '$lib/config';
 import { onMount } from 'svelte';
 import data from '@emoji-mart/data';
 import { Picker } from 'emoji-mart';
@@ -14,43 +14,12 @@ import { Picker } from 'emoji-mart';
 import type { BaseEmoji } from '@types/emoji-mart';
 
 let pool: SimplePool;
-let reactionEvents: NostrEvent[] = [];
-let profiles: Map<string, NostrEvent> = new Map<string, NostrEvent>();
 let targetURL: string;
 let npub: string;
 let emojiPicker: HTMLElement;
 let emojiPickerVisible: Boolean;
 let customEmojiMap: Map<string, string>;
 let isGettingCustomEmojis: boolean = false;
-
-const getReactions = async (url: string): Promise<void> => {
-	if (!URL.canParse(url))
-		return;
-	const kind7events = await getGeneralEvents(pool, defaultRelays, [{ kinds: [7], '#r': [url] }], (event: NostrEvent) => {
-		if (!reactionEvents.some(ev => ev.id === event.id)) {
-			reactionEvents = insertEventIntoAscendingList(reactionEvents, event);
-		}
-	});
-	const pubkeys: string[] = kind7events.map(ev => ev.pubkey);
-	const kind0events = await getGeneralEvents(pool, profileRelays, [{ kinds: [0], authors: pubkeys }], (event: NostrEvent) => {
-		const prof = profiles.get(event.pubkey);
-		if (prof === undefined || prof.created_at < event.created_at) {
-			try {
-				const obj = JSON.parse(event.content);
-			} catch (error) {
-				console.warn(error);
-				return;
-			}
-			profiles.set(event.pubkey, event);
-			profiles = profiles;
-		}
-	});
-};
-
-const callSendReaction = async () => {
-	await sendReaction(pool, defaultRelays, window.location.href, '⭐');
-	await getReactions(window.location.href);//本来は不要 wss://relay.mymt.casa/ 用処理
-};
 
 const callSendEmoji = () => {
 	emojiPickerVisible = !emojiPickerVisible;
@@ -60,7 +29,6 @@ const callSendEmoji = () => {
 	const onEmojiSelect = async (emoji: BaseEmoji) => {
 		await sendReaction(pool, defaultRelays, targetURL, emoji.native ?? (emoji as any).shortcodes as string, (emoji as any).src as string);
 		emojiPickerVisible = false;
-		await getReactions(window.location.href);//本来は不要 wss://relay.mymt.casa/ 用処理
 	};
 	const picker = new Picker({
 		data,
@@ -184,7 +152,6 @@ onMount(async () => {
 	pool = new SimplePool();
 	customEmojiMap = new Map<string, string>();
 	targetURL = window.location.href;
-	await getReactions(window.location.href);
 });
 
 </script>
@@ -196,26 +163,9 @@ onMount(async () => {
 <header>
 	<h1 data-makibishi-url="">
 		<a href="./">MAKIBISHI</a>
-		<span class="makibishi-container">
-			<button class="makibishi-button" on:click={() => callSendReaction()} title="add star"><svg><use xlink:href="./star.svg#reaction"></use></svg></button>
-			{#each reactionEvents as ev}
-				{@const emojiTag = ev.tags.find(tag => tag[0] === 'emoji')}
-				<span class="makibishi-unit">
-				{#if profiles.has(ev.pubkey) }
-					{@const prof = profiles.get(ev.pubkey)}
-					{@const obj = JSON.parse(prof?.content ?? '{}')}
-					{@const npub = nip19.npubEncode(ev.pubkey) }
-					{@const name = obj.name ?? '' }
-					<span class="makibishi-content">{#if ev.content === `:${emojiTag?.at(1) ?? ''}:`}<img src={emojiTag?.at(2)} alt={ev.content} title={ev.content} />{:else}{ ev.content }{/if}</span>
-					<a class="makibishi-link" href="{urlToLinkEvent}/{npub}" target="_blank" rel="noopener noreferrer">
-						<img class="makibishi-profile-picture" src={obj.picture ?? getRoboHashURL(ev.pubkey)} alt="@{name}" title="@{name}" />
-					</a>
-				{:else}
-					<span class="makibishi-content">{#if ev.content === `:${emojiTag?.at(1) ?? ''}:`}<img src={emojiTag?.at(2)} alt={ev.content} title={ev.content} />{:else}{ ev.content }{/if}</span>
-				{/if}
-				</span>
-			{/each}
-		</span>
+		<span id="makibishi"
+			data-relays={defaultRelays.join(',')}
+		>
 	</h1>
 	<p>Relay: {defaultRelays.join(';')}</p>
 </header>
@@ -226,7 +176,7 @@ onMount(async () => {
 		Nostrイベントに対してでなく、URLに対してリアクションします。<br />
 		※現時点ではNIPs違反なので、送信先リレーは絞って運用中。</p>
 	<pre><code>{`{
-  "kind": 7,
+  "kind": ${ reactionEventKind },
   "content": "⭐",
   "tags": [
     ["r", "https://example.com/"]
@@ -249,40 +199,6 @@ onMount(async () => {
 <footer><a href={linkGitHub} target="_blank" rel="noopener noreferrer">GitHub</a></footer>
 
 <style>
-span.makibishi-container {
-	font-size: 16px;
-}
-span.makibishi-container > span.makibishi-unit a {
-	text-decoration: none;
-}
-span.makibishi-container > span.makibishi-unit {
-	position: relative;
-}
-span.makibishi-container > span.makibishi-unit > a.makibishi-link {
-	position: absolute;
-	bottom: 16px;
-	left: 0;
-	visibility: hidden;
-}
-span.makibishi-container > span.makibishi-unit:hover > a.makibishi-link {
-	visibility: visible;
-}
-span.makibishi-container > span.makibishi-unit > span.makibishi-content > img {
-	height: 16px;
-}
-span.makibishi-container > span.makibishi-unit > a.makibishi-link > img {
-	width: 16px;
-	height: 16px;
-}
-span.makibishi-container > button.makibishi-button {
-	background-color: transparent;
-	border: none;
-	outline: none;
-	padding: 0;
-	width: 16px;
-	height: 16px;
-	cursor: pointer;
-}
 button.makibishi-emoji {
 	background-color: transparent;
 	border: none;
@@ -292,11 +208,6 @@ button.makibishi-emoji {
 	height: 24px;
 	cursor: pointer;
 }
-span.makibishi-container > button.makibishi-button > svg {
-	width: 16px;
-	height: 16px;
-	fill: white;
-}
 button.makibishi-emoji > svg {
 	width: 24px;
 	height: 24px;
@@ -304,9 +215,6 @@ button.makibishi-emoji > svg {
 }
 div.makibishi-hidden {
 	display: none;
-}
-span.makibishi-container > button.makibishi-button:active > svg {
-	fill: yellow;
 }
 input[type="text"] {
 	width: calc(100% - 1.5em);

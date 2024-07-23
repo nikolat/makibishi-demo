@@ -6,7 +6,6 @@
 - [emoji-mart](https://github.com/missive/emoji-mart)
 - [Svelte](https://svelte.dev/)
 - [Water.css](https://watercss.kognise.dev/)
-- [RoboHash](https://robohash.org/)
 - [Evericons](http://www.evericons.com/)
 - [Nostr](https://github.com/nostr-protocol/nips)
 
