@@ -163,7 +163,7 @@ onMount(async () => {
 <header>
 	<h1 data-makibishi-url="">
 		<a href="./">MAKIBISHI</a>
-		<span id="makibishi"
+		<span class="makibishi"
 			data-relays={defaultRelays.join(',')}
 		>
 	</h1>
