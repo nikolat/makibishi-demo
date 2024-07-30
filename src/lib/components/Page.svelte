@@ -161,7 +161,7 @@ onMount(async () => {
 </svelte:head>
 
 <header>
-	<h1 data-makibishi-url="">
+	<h1>
 		<a href="./">MAKIBISHI Demo</a>
 		<span class="makibishi"
 			data-relays={defaultRelays.join(',')}
