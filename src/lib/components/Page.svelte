@@ -157,17 +157,24 @@ onMount(async () => {
 </script>
 
 <svelte:head>
-	<title>MAKIBISHI</title>
+	<title>MAKIBISHI Demo</title>
 </svelte:head>
 
 <header>
 	<h1 data-makibishi-url="">
-		<a href="./">MAKIBISHI</a>
+		<a href="./">MAKIBISHI Demo</a>
 		<span class="makibishi"
 			data-relays={defaultRelays.join(',')}
 		>
 	</h1>
-	<p>Relay: {defaultRelays.join(';')}</p>
+	<details class="relays">
+		<summary>Relays</summary>
+		<ul>
+			{#each defaultRelays as relay}
+			<li>{relay}</li>
+			{/each}
+		</ul>
+	</details>
 </header>
 <main>
 	<h2>これは何？</h2>
@@ -198,6 +205,14 @@ onMount(async () => {
 <footer><a href={linkGitHub} target="_blank" rel="noopener noreferrer">GitHub</a></footer>
 
 <style>
+.relays {
+	display: inline-block;
+	margin: 0;
+	font-size: small;
+}
+.relays li {
+	font-size: x-small;
+}
 button.makibishi-emoji {
 	background-color: transparent;
 	border: none;
