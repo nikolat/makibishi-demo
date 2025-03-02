@@ -14,16 +14,16 @@ import { Picker } from 'emoji-mart';
 import type { BaseEmoji } from '@types/emoji-mart';
 
 let pool: SimplePool;
-let targetURL: string;
-let npub: string;
-let emojiPicker: HTMLElement;
-let emojiPickerVisible: Boolean;
+let targetURL: string = $state('');
+let npub: string = $state('');
+let emojiPicker: HTMLElement | undefined = $state();
+let emojiPickerVisible: Boolean = $state(false);
 let customEmojiMap: Map<string, string>;
-let isGettingCustomEmojis: boolean = false;
+let isGettingCustomEmojis: boolean = $state(false);
 
 const callSendEmoji = () => {
 	emojiPickerVisible = !emojiPickerVisible;
-	if (emojiPicker.children.length > 0) {
+	if (emojiPicker?.children.length ?? 0 > 0) {
 		return;
 	}
 	const onEmojiSelect = async (emoji: BaseEmoji) => {
@@ -46,7 +46,7 @@ const callSendEmoji = () => {
 		],
 		onEmojiSelect
 	});
-	emojiPicker.appendChild(picker as any);
+	emojiPicker?.appendChild(picker as any);
 };
 
 const getNpubWithNIP07 = async (): Promise<void> => {
@@ -194,10 +194,10 @@ onMount(async () => {
 		<dt><label for="target-url">Target URL</label></dt>
 		<dd><input id="target-url" type="text" bind:value={targetURL} /></dd>
 		<dt><label for="npub-input">npub for Custom Emoji (optional)</label></dt>
-		<dd><input id="npub-input" type="text" placeholder="npub1... or nprofile1..." bind:value={npub} on:change={getCustomEmojis} /><button on:click={getNpubWithNIP07}>NIP-07</button></dd>
+		<dd><input id="npub-input" type="text" placeholder="npub1... or nprofile1..." bind:value={npub} onchange={getCustomEmojis} /><button onclick={getNpubWithNIP07}>NIP-07</button></dd>
 		<dt><label for="emoji-select">Select Emoji</label> {#if isGettingCustomEmojis}(preparing...){/if}</dt>
 		<dd>
-			<button id="emoji-select" class="makibishi-emoji" on:click={callSendEmoji} title="Emoji Reaction" disabled={isGettingCustomEmojis}><svg><use xlink:href="./smiled.svg#emoji"></use></svg></button>
+			<button id="emoji-select" class="makibishi-emoji" onclick={callSendEmoji} title="Emoji Reaction" aria-label="Emoji Reaction" disabled={isGettingCustomEmojis}><svg><use xlink:href="./smiled.svg#emoji"></use></svg></button>
 			<div bind:this={emojiPicker} class={emojiPickerVisible ? '' : 'makibishi-hidden'}></div>
 		</dd>
 	</dl>
