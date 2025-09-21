@@ -13,26 +13,37 @@ declare global {
 
 export const getGeneralEvents = (pool: SimplePool, relays: string[], filters: Filter[], callbackEvent: Function = () => {}): Promise<NostrEvent[]> => {
 	return new Promise((resolve) => {
+		let count: number = 0;
+		const subs: SubCloser[] = [];
 		const events: NostrEvent[] = [];
 		const onevent = (ev: NostrEvent) => {
 			events.push(ev);
 			callbackEvent(ev);
 		};
 		const oneose = () => {
-			sub.close();
-			resolve(events);
+			count++;
+			if (count >= filters.length) {
+				for (const sub of subs) {
+					sub.close();
+				}
+				resolve(events);
+			}
 		};
-		const sub: SubCloser = pool.subscribeMany(
-			relays,
-			filters,
-			{ onevent, oneose }
-		);
+		for (const filter of filters) {
+			const sub: SubCloser = pool.subscribeMany(
+				relays,
+				filter,
+				{ onevent, oneose }
+			);
+			subs.push(sub);
+		}
 	});
 };
 
 export const sendReaction = async (pool: SimplePool, relaysToWrite: string[], targetURL: string, content: string, emojiurl?: string) => {
 	const tags: string[][] = [
-		['r', targetURL],
+		['k', 'web'],
+		['i', targetURL],
 	];
 	if (emojiurl) {
 		tags.push(['emoji', content.replaceAll(':', ''), emojiurl]);

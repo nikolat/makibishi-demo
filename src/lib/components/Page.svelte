@@ -61,23 +61,6 @@ const getNpubWithNIP07 = async (): Promise<void> => {
 		}
 		npub = nip19.npubEncode(pubkey);
 	}
-	if (pubkey !== undefined && nostr?.getRelays) {
-		let rr: RelayRecord;
-		try {
-			rr = await nostr.getRelays();
-		} catch (error) {
-			console.error(error);
-			return;
-		}
-		const relays: string[] = [];
-		for (const [k, v] of Object.entries(rr)) {
-			if (v.read && URL.canParse(k))
-				relays.push(normalizeURL(k));
-		}
-		if (relays.length > 0) {
-			npub = nip19.nprofileEncode({pubkey, relays})
-		}
-	}
 	await getCustomEmojis();
 };
 
@@ -165,7 +148,7 @@ onMount(async () => {
 		<a href="./">MAKIBISHI Demo</a>
 		<span class="makibishi"
 			data-relays={defaultRelays.join(',')}
-		>
+		></span>
 	</h1>
 	<details class="relays">
 		<summary>Relays</summary>
@@ -185,7 +168,8 @@ onMount(async () => {
   "kind": ${ reactionEventKind },
   "content": "⭐",
   "tags": [
-    ["r", "https://example.com/"]
+    ["k", "web"],
+    ["i", "https://example.com/"]
   ],
   ...other fields
 }`}</code></pre>
